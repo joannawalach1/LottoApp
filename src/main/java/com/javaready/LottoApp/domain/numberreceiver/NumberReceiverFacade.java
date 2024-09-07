@@ -1,26 +1,52 @@
 package com.javaready.LottoApp.domain.numberreceiver;
 
+import com.javaready.LottoApp.domain.numberreceiver.dto.InputNumberResultDto;
+import com.javaready.LottoApp.domain.numberreceiver.dto.TicketDto;
+import lombok.AllArgsConstructor;
+
+import java.time.Clock;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 
+@AllArgsConstructor
 public class NumberReceiverFacade {
 
-    public String inputNumbers(Set<Integer> numbers) {
-        List<Integer> filteredNumbers = filteredNumbers(numbers);
-        if (areAllNumbersInRange(numbers)) {
-            return "success";
+    private final NumberReceiverValidator numberReceiverValidator;
+    private final NumberReceiverRepository numberReceiverRepository;
+    private final Clock clock;
+
+    public InputNumberResultDto inputNumbers(Set<Integer> numbersFromUser) {
+        if (!numberReceiverValidator.filteredNumbers(numbersFromUser)) {
+            return InputNumberResultDto.builder()
+                    .message("fail")
+                    .build();
         }
-        return "fail";
+
+        String ticketId = UUID.randomUUID().toString();
+        LocalDateTime drawData = LocalDateTime.now(clock);
+        Ticket ticket = new Ticket(ticketId, drawData, numbersFromUser);
+        Ticket savedTicket = numberReceiverRepository.save(ticket);
+
+        if (savedTicket != null) {
+            return InputNumberResultDto.builder()
+                    .message("Success")
+                    .ticketId(savedTicket.ticketId())
+                    .drawDate(savedTicket.drawData())
+                    .numbersFromUser(savedTicket.numbersFromUser())
+                    .build();
+        } else {
+            return InputNumberResultDto.builder()
+                    .message("Fail")
+                    .build();
+        }
     }
 
-    private static boolean areAllNumbersInRange(Set<Integer> numbers) {
-        return numbers.size() == 6;
-    }
-
-    private List<Integer> filteredNumbers(Set<Integer> numbers) {
-        return numbers.stream()
-               .filter(number -> number >= 1)
-               .filter(number -> number <= 99)
-               .toList();
+    public List<TicketDto> userNumbers(LocalDateTime drawDate) {
+        List<Ticket> allTicketsByDate = numberReceiverRepository.findAllTicketsByDate(drawDate);
+        return allTicketsByDate.stream()
+                .map(TicketMapper::mapFromTicket)
+                .toList();
     }
 }

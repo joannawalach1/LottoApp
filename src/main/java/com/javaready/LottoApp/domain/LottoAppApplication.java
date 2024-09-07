@@ -1,4 +1,4 @@
-package com.javaready.LottoApp;
+package com.javaready.LottoApp.domain;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -9,5 +9,4 @@ public class LottoAppApplication {
 	public static void main(String[] args) {
 		SpringApplication.run(LottoAppApplication.class, args);
 	}
-
 }
