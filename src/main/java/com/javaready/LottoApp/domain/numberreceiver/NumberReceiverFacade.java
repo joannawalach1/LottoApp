@@ -8,7 +8,6 @@ import java.time.Clock;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Set;
-import java.util.UUID;
 
 @AllArgsConstructor
 public class NumberReceiverFacade {
@@ -16,6 +15,7 @@ public class NumberReceiverFacade {
     private final NumberReceiverValidator numberReceiverValidator;
     private final NumberReceiverRepository numberReceiverRepository;
     private final Clock clock;
+    private final HashGenerator hashGenerator;
 
     public InputNumberResultDto inputNumbers(Set<Integer> numbersFromUser) {
         if (!numberReceiverValidator.filteredNumbers(numbersFromUser)) {
@@ -24,9 +24,9 @@ public class NumberReceiverFacade {
                     .build();
         }
 
-        String ticketId = UUID.randomUUID().toString();
+        String hash = hashGenerator.generateHash();
         LocalDateTime drawData = LocalDateTime.now(clock);
-        Ticket ticket = new Ticket(ticketId, drawData, numbersFromUser);
+        Ticket ticket = new Ticket(hash, drawData, numbersFromUser);
         Ticket savedTicket = numberReceiverRepository.save(ticket);
 
         if (savedTicket != null) {
